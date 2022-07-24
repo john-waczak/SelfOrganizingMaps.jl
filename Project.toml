@@ -1,0 +1,13 @@
+name = "SelfOrganizingMaps"
+uuid = "ba4b7379-301a-4be0-bee6-171e4e152787"
+authors = ["John Waczak"]
+version = "0.1.0"
+
+[compat]
+julia = "1.7"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
