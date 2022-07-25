@@ -23,5 +23,7 @@ export SOM
 export SquareSOM
 export SphericalSOM
 export getBMUidx
+export updateWeights!
+
 
 end

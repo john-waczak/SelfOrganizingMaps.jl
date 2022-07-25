@@ -91,7 +91,7 @@ function SquareSOM(nfeatures::Int,
 end
 
 
-
+# for the spherical version
 function getBMUidx(w::AbstractArray{Float64, 2}, x::AbstractVector)
     D² = sum((w .- x) .^ 2, dims=1)
     idx = argmin(D²)
@@ -99,6 +99,7 @@ function getBMUidx(w::AbstractArray{Float64, 2}, x::AbstractVector)
 end
 
 
+# for the square version
 function getBMUidx(w::AbstractArray{Float64, 3}, x::AbstractVector)
     D² = sum((w.-x), dims=1)
     idx = argmin(D²)
@@ -118,31 +119,22 @@ function getBMUidx(som::SOM, x::AbstractVector)
 end
 
 
-
-
 """
-    updateWeights!(SOM, x, η, σ², bmu)
+    updateWeights!(som::SquareSOM, x::AbstractVector)
 
+Update the weights of the self organizing map `som` given the feature vector `x`.
 """
-function updateWeights!(SOM, x, η, σ², bmu)
-    M = size(SOM)[1]
-    N = size(SOM)[2]
+function updateWeights!(som::SquareSOM, x::AbstractVector, η::Float64, σ²::Float64)
+    M = size(som.w, 2)
+    N = size(som.w, 3)
 
-    g,h = bmu
+    g,h = getBMUidx(som, x)
 
-    # if radius is small, only update bmu
-    # otherwise change in cells via neighborhood function
-    if σ² < 1e-3
-        SOM[g,h,:] += η .* (x .- SOM[g, h, :])
-    else
-        for i ∈ 1:M, j ∈ 1:N
-            d² = (i-g)^2 + (j-h)^2
-            f = exp(-d²/(2σ²))
-            SOM[i,j,:] += η .* f .* (x .- SOM[i,j,:])
-        end
-    end
+    for i ∈ 1:M, j ∈ 1:N
+        d² = (i-g)^2 + (j-h)^2
+        f = exp(-d²/(2σ²)) # decrease update the further away you are
+        som.w[:, i, j] += η .* f .* (x .- som.w[:, i, j])
+   end
 end
-
-
 
 

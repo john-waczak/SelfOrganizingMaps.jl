@@ -32,7 +32,6 @@ sphericaldistance.(ϕ₁,θ₁,ϕ,θ)
 
 sphericaldistance(ϕ₁,θ₁,ϕ₂,θ₂)
 
-SquareSOM(20,10,10, euclideandistance)
 
 
 w = rand(2, 100)
@@ -52,34 +51,4 @@ idx = getBMUidx(som, x)
 som.w[:,idx...]
 
 
-# set up epochs
-epochs = 0:50
-
-# set up η(t) decay rate
-λs = [0.001, 0.1, 0.5, 0.99]
-
-p = plot();
-xlabel!(p, "epoch")
-ylabel!(p, "η(t)")
-for λ ∈ λs
-    η = exp.(-λ .* epochs)
-    plot!(p, epochs, η, label="λ=$(λ)")
-end
-display(p)
-
-
-
-
-# neighborhood distance function
-distance = 0:30  # distance between nodes
-σ² = [0.1, 1, 10, 100]  # radius
-
-p2 = plot();
-xlabel!(p2, "Distance")
-ylabel!(p2, "Neighborhood function f")
-for s² ∈ σ²
-    f = exp.(-distance .^ 2 ./ (2*s²))
-    plot!(p2, distance, f, label="σ²=$(s²)")
-end
-display(p2)
-
+updateWeights!(som, x, som.η₀, som.σ₀²)
