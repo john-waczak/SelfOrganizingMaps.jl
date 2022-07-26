@@ -1,13 +1,17 @@
 using DataFrames
 using Random
 
+
+
 """
     sphericaldistance(ϕ₁,θ₁,ϕ₂,θ₂)
 
 Compute the distance between two points on the unit sphere with coordinates (ϕ₁, θ₁), and (ϕ₂, θ₂) using the physics convention for ϕ the polar angle and θ the azimuth.
 """
 function sphericaldistance(ϕ₁,θ₁,ϕ₂,θ₂)
-    return acos(sin(θ₁)*sin(θ₂)*cos(ϕ₁-ϕ₂) + cos(θ₁)*cos(θ₂))
+    cos_σ = minimum([sin(θ₁)*sin(θ₂)*cos(ϕ₁-ϕ₂) + cos(θ₁)*cos(θ₂), 1.0]) 
+
+    return acos(cos_σ)
 end
 
 
@@ -52,16 +56,16 @@ struct SquareSOM{M<:AbstractArray, F<:Function} <: SOM
 end
 
 
-struct SphericalSOM{M<:AbstractArray, F<:Function} <: SOM
-    w
+struct SphericalSOM{M<:AbstractArray, F<:Function, V<:AbstractVector} <: SOM
+    w::M
     dist_func::F # for computing neighborhood of nodes to update
     η₀::Float64  # base update factor
     λ::Float64  # update factor decay rate
     σ₀²::Float64 # base radius
     β::Float64  # radius decay rate
     nepochs::Int
-    x
-    y
+    ϕ::V  # polar angle
+    θ::V  # azimuth
 end
 
 
@@ -93,6 +97,42 @@ function SquareSOM(nfeatures::Int,
 end
 
 
+
+"""
+    function SphericalSOM(nfeatures::Int, nnodes::Int, dist_func=sphericaldistance, η₀ = 0.1, λ = 0.1, σ₀² = 1.0, β = 0.1, nepochs = 25, )
+
+
+Generate a Self Organizing Map with `nnodes` that live on the unit sphere.
+"""
+function SphericalSOM(nfeatures::Int,
+                      nnodes::Int;
+                      dist_func=sphericaldistance,
+                      η₀ = 0.99,
+                      λ = 0.1,
+                      σ₀² = 0.3,
+                      β = 0.1,
+                      nepochs = 25,)
+
+    ϕ,θ = getspherepoints(nnodes)
+
+    return SphericalSOM(rand(nfeatures,nnodes),
+                        dist_func,
+                        η₀,
+                        λ,
+                        σ₀²,
+                        β,
+                        nepochs,
+                        ϕ,
+                        θ,
+                        )
+end
+
+
+
+
+
+
+
 # for the spherical version
 function getBMUidx(w::AbstractArray{Float64, 2}, x::AbstractVector)
     D² = sum((w .- x) .^ 2, dims=1)
@@ -111,6 +151,7 @@ function getBMUidx(w::AbstractArray{Float64, 3}, x::AbstractVector)
 end
 
 
+
 """
     getBMUidx(som::SOM, x::AbstractVector)
 
@@ -121,8 +162,9 @@ function getBMUidx(som::SOM, x::AbstractVector)
 end
 
 
+
 """
-    updateWeights!(som::SquareSOM, x::AbstractVector)
+    updateWeights!(som, x)
 
 Update the weights of the self organizing map `som` given the feature vector `x`.
 """
@@ -140,14 +182,27 @@ function updateWeights!(som::SquareSOM, x::AbstractVector, η::Float64, σ²::Fl
 end
 
 
+function updateWeights!(som::SphericalSOM, x::AbstractVector, η::Float64, σ²::Float64)
+    N = size(som.w, 2)
+    idx = getBMUidx(som, x)
+
+    for i ∈ 1:N
+        d² = sphericaldistance(som.ϕ[idx], som.θ[idx], som.ϕ[i], som.θ[i])
+        f = exp(-d²/(2σ²))
+        som.w[:,i] += η .* f .* (x .- som.w[:,i])
+    end
+
+end
+
+
 
 
 """
-    train!(som::SquareSOM, df::DataFrame)
+    train!(som::SOM, df::DataFrame)
 
-Using the DataFrame `df`, train the weights of the `som::SquareSOM`.
+Using the DataFrame `df`, train the weights of `som`.
 """
-function train!(som::SquareSOM, df::DataFrame)
+function train!(som::SOM, df::DataFrame)
     X = Matrix(df)
     η=som.η₀
     σ²=som.σ₀²
@@ -165,3 +220,5 @@ function train!(som::SquareSOM, df::DataFrame)
         σ² = som.σ₀² * exp(-epoch * som.β)
     end
 end
+
+
