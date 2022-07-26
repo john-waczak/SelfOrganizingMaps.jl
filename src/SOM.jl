@@ -1,3 +1,5 @@
+using DataFrames
+using Random
 
 """
     sphericaldistance(ϕ₁,θ₁,ϕ₂,θ₂)
@@ -71,8 +73,8 @@ Generate a Self Organizing Map with a square topology.
 """
 function SquareSOM(nfeatures::Int,
                    M::Int,
-                   N::Int,
-                   dist_func;
+                   N::Int;
+                   dist_func=euclideandistance,
                    η₀ = 0.1, # base
                    λ = 0.1,
                    σ₀² = 1.0,
@@ -131,10 +133,35 @@ function updateWeights!(som::SquareSOM, x::AbstractVector, η::Float64, σ²::Fl
     g,h = getBMUidx(som, x)
 
     for i ∈ 1:M, j ∈ 1:N
-        d² = (i-g)^2 + (j-h)^2
+        d² = euclideandistance(g,h,i,j)
         f = exp(-d²/(2σ²)) # decrease update the further away you are
         som.w[:, i, j] += η .* f .* (x .- som.w[:, i, j])
    end
 end
 
 
+
+
+"""
+    train!(som::SquareSOM, df::DataFrame)
+
+Using the DataFrame `df`, train the weights of the `som::SquareSOM`.
+"""
+function train!(som::SquareSOM, df::DataFrame)
+    X = Matrix(df)
+    η=som.η₀
+    σ²=som.σ₀²
+
+    # training loop
+    for epoch ∈ som.nepochs
+        shuffle!(X)
+        # loop through each datapoint
+        for x ∈ eachrow(X)
+            updateWeights!(som, x, η, σ²)
+        end
+
+        # update the η and σ²
+        η = som.η₀ * exp(-epoch * som.λ)
+        σ² = som.σ₀² * exp(-epoch * som.β)
+    end
+end

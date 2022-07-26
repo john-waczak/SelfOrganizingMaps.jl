@@ -24,6 +24,6 @@ export SquareSOM
 export SphericalSOM
 export getBMUidx
 export updateWeights!
-
+export train!
 
 end
