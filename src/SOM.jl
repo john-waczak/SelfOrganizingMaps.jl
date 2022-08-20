@@ -133,7 +133,7 @@ function train!(som::SOM, X::AbstractArray)
     for epoch ∈ 1:som.Nepochs
         shuffle!(X)
         # loop through each datapoint
-        for i ∈ 1:Nsteps
+        for i ∈ 1:size(X,2)
             updateWeights!(som, X[:,i], j, Nsteps)
             j += 1
         end
