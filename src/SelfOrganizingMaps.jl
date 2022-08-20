@@ -2,6 +2,7 @@ module SelfOrganizingMaps
 
 using Distances
 using Random
+using Tables
 
 import MLJModelInterface
 import Random.GLOBAL_RNG
