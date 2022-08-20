@@ -118,22 +118,24 @@ function updateWeights!(som::SOM, x::AbstractVector, step::Int, Nsteps::Int)
 
     for i ∈ 1:size(som.W, 2)
         # compute distance to bmu
-        d = evaluate(som.neighbor_distance, som.coords[:,i], som.coords[:,idx])
+        @inbounds d = evaluate(som.neighbor_distance, som.coords[:,i], som.coords[:,idx])
         f = som.neighbor_function(d, som.σ_decay(som.σ², step, Nsteps))
-        som.W[:,i] += som.η_decay(som.η, step, Nsteps) .* f .* (x .- som.W[:,i])
+        @inbounds som.W[:,i] += som.η_decay(som.η, step, Nsteps) .* f .* (x .- som.W[:,i])
     end
 
 end
 
 function train!(som::SOM, X::AbstractArray)
     # training loop
-    Nsteps = size(X, 2)
+    Nsteps = size(X, 2) * som.Nepochs
 
+    j = 1  # don't reset η and σ each epoch
     for epoch ∈ 1:som.Nepochs
         shuffle!(X)
         # loop through each datapoint
         for i ∈ 1:Nsteps
-            updateWeights!(som, X[:,i], i, Nsteps)
+            updateWeights!(som, X[:,i], j, Nsteps)
+            j += 1
         end
     end
 end

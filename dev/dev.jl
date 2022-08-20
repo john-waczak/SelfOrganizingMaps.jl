@@ -2,6 +2,7 @@ using SelfOrganizingMaps
 using Plots
 using DataFrames
 using Distances
+using MLJBase
 
 function SOMtoRGB(som::SOM)
     SOM_pretty = [RGB(som.W[1,i], som.W[2,i], som.W[3,i]) for i∈1:size(som.W, 2)]
@@ -43,33 +44,33 @@ end
 
 
 
-
-#X = rand(3, 5000)
+## try it out!
 X = [1.0 0.0 0.0;
      0.0 1.0 0.0;
      0.0 0.0 1.0;
      ]
 
 
-#som = SOM(25, 3, 1.0, 0.2^2, :hexagonal, :asymptotic, :gaussian, euclidean, 1)
-#som = SOM(25, 3, 0.20, 0.2^2, :hexagonal, :exponential, :gaussian, cosine_dist, 100)
-som = SOM(25, 3, 0.20, 0.2^2, :hexagonal, :exponential, :gaussian, cosine_dist, 1)
+df_X = DataFrame(:r=>[1.0, 0.0, 0.0],
+                  :g=>[0.0, 1.0, 0.0],
+                  :b=>[0.0, 0.0, 1.0]
+                 )
 
-p1 = plotHexSOM(som)
-savefig("imgs/000.png")
+model = SelfOrganizingMap()
+model.k = 25
+model.η = 0.20
+model.σ² = 0.2^2
+model.topology = :hexagonal
+#model.matching_distance = cosine_dist
+#model.matching_distance = chebyshev
+model.Nepochs=50
 
-for i ∈ 1:100
-    train!(som, X)
-    p = plotHexSOM(som)
-    savefig("imgs/"*lpad(i,3,"0")*".png")
-end
+
+m = machine(model, df_X)
+fit!(m)
+
+m.fitresult
+X̃ = DataFrame(MLJBase.transform(m, X))
 
 
-
-p2 = plotHexSOM(som)
-# layout = @layout [a{0.45w} b{0.45w}]
-plot(p1, p2, dpi=600) #, layout=layout)#, plot_title="Pre-training vs Post-training")
-
-savefig("test_som.svg")
-savefig("test_som.png")
-savefig("test_som.pdf")
+plotHexSOM(m.fitresult)

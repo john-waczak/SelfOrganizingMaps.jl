@@ -23,7 +23,7 @@ const PKG = "SelfOrganizingMaps"
 MMI.@mlj_model mutable struct SelfOrganizingMap <: MMI.Unsupervised
     k::Int = 10::(_ ≥ 2)
     η::Float64 = 0.5::(_ ≥ 0.0)
-    σ²::Float64 = 1.0::(_ ≥ 0.0)
+    σ²::Float64 = 0.05::(_ ≥ 0.0)
     topology::Symbol = :rectangular::(_ ∈ (:rectangular, :hexagonal, :spherical))
     η_decay::Symbol = :exponential::(_ ∈ (:asymptotic, :exponential))
     σ_decay::Symbol = :exponential::(_ ∈ (:asymptotic, :exponential, :none))
