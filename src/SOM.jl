@@ -1,224 +1,124 @@
-using DataFrames
-using Random
-
-
-
-"""
-    sphericaldistance(ϕ₁,θ₁,ϕ₂,θ₂)
-
-Compute the distance between two points on the unit sphere with coordinates (ϕ₁, θ₁), and (ϕ₂, θ₂) using the physics convention for ϕ the polar angle and θ the azimuth.
-"""
-function sphericaldistance(ϕ₁,θ₁,ϕ₂,θ₂)
-    cos_σ = minimum([sin(θ₁)*sin(θ₂)*cos(ϕ₁-ϕ₂) + cos(θ₁)*cos(θ₂), 1.0]) 
-
-    return acos(cos_σ)
+struct SOM{T<:AbstractArray, T2<:AbstractArray,  R<:AbstractFloat, F<:Function, F2<:Function, M<:PreMetric, M2<:PreMetric}
+    W::T  # weigts n x d matrix
+    coords::T2 # 2 x d  smatrix of lnode coordinates
+    σ²::R  # radius for neighbor distance
+    η::R  # learning rate
+    η_decay::F  # [:exponential, :asymptotic]
+    σ_decay::F  # [:exponential, :asymptotic]
+    neighbor_function::F2 #[:gaussian, :mexican_hat]
+    neighbor_distance::M  # any metric from Distances.jl i.e. [euclidean, spherical_angle, cityblock, etc...]
+    matching_function::M2  # [euclidean, cosine_dist, etc...]
+    Nepochs::Int
 end
 
 
+"""
+    function exponential_decay(η, i, N)
+
 
 """
-    euclideandistance(i,j,m,n)
+function exponential_decay(η, i, N)
+    return η*exp(-i/N)
+end
 
-Compute the euclidean distance between grid points (i,j) and (m,n), i.e.
-`d = (i-m)^2 + (j-n)^2`
-"""
-function euclideandistance(i,j,m,n)
-    return (i-m)^2 + (j-n)^2
+function asymptotic_decay(η, i, N)
+    return η/(1 + i/(N/2))  # see MiniSOM.py
 end
 
 
+function gaussian_neighbor(d, σ²)
+    return exp(-d^2/(2σ²))
+end
 
-
-
-
-
-# we want a supertype of SOM
-# and then we can have a subtype of SquareSOM and SphereSOM
-# both have a matrix of weights and a distance function
-# SquareSOM has gridtype
-# SphereSOM has x,y coordinates
-# We could also do a generalized SOM that has Coordinates.
-# weights are either in a 1d or 2d grid. The last dimension will
-# match the input shape.
-
-
-abstract type SOM end
-
-struct SquareSOM{M<:AbstractArray, F<:Function} <: SOM
-    w::M
-    dist_func::F  # for computing neighborhood to nodes to update
-    η₀::Float64  # base update factor
-    λ::Float64  # update factor decay rate
-    σ₀²::Float64 # base radius
-    β::Float64  # radius decay rate
-    nepochs::Int
-    wrap::Symbol
+function mexicanhat_neighbor(d, σ²)
+    return (1- d^2/σ²)*exp(-d^2/(2σ²))
 end
 
 
-struct SphericalSOM{M<:AbstractArray, F<:Function, V<:AbstractVector} <: SOM
-    w::M
-    dist_func::F # for computing neighborhood of nodes to update
-    η₀::Float64  # base update factor
-    λ::Float64  # update factor decay rate
-    σ₀²::Float64 # base radius
-    β::Float64  # radius decay rate
-    nepochs::Int
-    ϕ::V  # polar angle
-    θ::V  # azimuth
+function SOM(k::Int,
+             nfeatures::Int,
+             η::Float64,
+             σ²::Float64,
+             topology::Symbol,
+             η_decay::Symbol,
+             σ_decay::Symbol,
+             neighbor_function::Symbol,
+             matching_function::PreMetric,
+             Nepochs::Int
+             )
+    # generate W, the matrix of weights of shape nfeatures × k² nodes
+    W = rand(Float32, (nfeatures, k^2))
+
+    # generate a k×k grid for :rectangular or hexagonal, otherwise, generate k² points
+    if topology == :hexagonal
+        coords = gethexpoints(k)
+        neighbor_distance = euclidean
+    elseif topology == :spherical
+        coords = getspherepoints(k^2)
+        neighbor_distance = spherical_angle
+    else
+        coords = getsquarepoints(k)
+        neighbor_distance = euclidean
+    end
+
+    # set the function for decreasing the learning rate
+    if η_decay == :exponential
+        decay_func = exponential_decay
+    else
+        decay_func = asymptotic_decay
+    end
+
+    # set the function for neighborhood updates
+    if neighbor_function == :mexican_hat
+        nfunc = mexicanhat_neighbor
+    else
+        nfunc = gaussian_neighbor
+    end
+
+    return SOM(W, coords,
+               σ², η,
+               decay_func, nfunc,
+               neighbor_distance, matching_function,
+               Nepochs
+               )
 end
-
-
-# NOTE: we can set up weights and coordinates as static arrays for increased speed. The weight matrix will need to be mutable though.
-"""
-    SquareSOM(nfeatures::Int, M::Int, N::Int, dist_func; η₀ = 0.1, # base λ = 0.1, σ₀² = 1.0, β = 0.1, nepochs = 25, wrap=:none)
-
-Generate a Self Organizing Map with a square topology.
-"""
-function SquareSOM(nfeatures::Int,
-                   M::Int,
-                   N::Int;
-                   dist_func=euclideandistance,
-                   η₀ = 0.1, # base
-                   λ = 0.1,
-                   σ₀² = 1.0,
-                   β = 0.1,
-                   nepochs = 25,
-                   wrap=:none)
-
-    return SquareSOM(rand(nfeatures,M,N),
-                     dist_func,
-                     η₀,
-                     λ,
-                     σ₀²,
-                     β,
-                     nepochs,
-                     wrap)
-end
-
-
-
-"""
-    function SphericalSOM(nfeatures::Int, nnodes::Int, dist_func=sphericaldistance, η₀ = 0.1, λ = 0.1, σ₀² = 1.0, β = 0.1, nepochs = 25, )
-
-
-Generate a Self Organizing Map with `nnodes` that live on the unit sphere.
-"""
-function SphericalSOM(nfeatures::Int,
-                      nnodes::Int;
-                      dist_func=sphericaldistance,
-                      η₀ = 0.99,
-                      λ = 0.1,
-                      σ₀² = 0.3,
-                      β = 0.1,
-                      nepochs = 25,)
-
-    ϕ,θ = getspherepoints(nnodes)
-
-    return SphericalSOM(rand(nfeatures,nnodes),
-                        dist_func,
-                        η₀,
-                        λ,
-                        σ₀²,
-                        β,
-                        nepochs,
-                        ϕ,
-                        θ,
-                        )
-end
-
-
-
 
 
 
 
 # for the spherical version
-function getBMUidx(w::AbstractArray{Float64, 2}, x::AbstractVector)
-    D² = sum((w .- x) .^ 2, dims=1)
-    idx = argmin(D²)
-    return idx[2]
-end
-
-
-# for the square version
-function getBMUidx(w::AbstractArray{Float64, 3}, x::AbstractVector)
-    D² = sum((w.-x), dims=1)
-    idx = argmin(D²)
-    i = idx[2]
-    j = idx[3]
-    return return i, j
-end
-
-
-
-"""
-    getBMUidx(som::SOM, x::AbstractVector)
-
-Given a self organizing map `som` and input vector `x`, return the indices of the best matching unit (BMU).
-"""
 function getBMUidx(som::SOM, x::AbstractVector)
-    return getBMUidx(som.w, x)
+    d = colwise(som.matching_function, som.W, rand(3))
+    idx = argmin(d)
+    return idx
 end
 
 
-
-"""
-    updateWeights!(som, x)
-
-Update the weights of the self organizing map `som` given the feature vector `x`.
-"""
-function updateWeights!(som::SquareSOM, x::AbstractVector, η::Float64, σ²::Float64)
-    M = size(som.w, 2)
-    N = size(som.w, 3)
-
-    g,h = getBMUidx(som, x)
-
-    for i ∈ 1:M, j ∈ 1:N
-        d² = euclideandistance(g,h,i,j)
-        f = exp(-d²/(2σ²)) # decrease update the further away you are
-        som.w[:, i, j] += η .* f .* (x .- som.w[:, i, j])
-   end
-end
-
-
-function updateWeights!(som::SphericalSOM, x::AbstractVector, η::Float64, σ²::Float64)
-    N = size(som.w, 2)
+function updateWeights!(som::SOM, x::AbstractVector, step::Int, Nsteps::Int)
+    N = size(som.W, 2)
     idx = getBMUidx(som, x)
 
-    for i ∈ 1:N
-        d² = sphericaldistance(som.ϕ[idx], som.θ[idx], som.ϕ[i], som.θ[i])
-        f = exp(-d²/(2σ²))
-        som.w[:,i] += η .* f .* (x .- som.w[:,i])
+    for i ∈ 1:size(som.W, 2)
+        # compute distance to bmu
+        d = evaluate(som.neighbor_distance, som.coords[:,i], som.coords[:,idx])
+        f = som.neighbor_function(d, som.σ²)
+        som.W[:,i] += som.η_decay(som.η, step, Nsteps) .* f .* (x .- som.W[:,i])
     end
 
 end
 
 
 
-
-"""
-    train!(som::SOM, df::DataFrame)
-
-Using the DataFrame `df`, train the weights of `som`.
-"""
-function train!(som::SOM, df::DataFrame)
-    X = Matrix(df)
-    η=som.η₀
-    σ²=som.σ₀²
-
+function train!(som::SOM, X::AbstractArray)
     # training loop
-    for epoch ∈ som.nepochs
+    Nsteps = size(X, 2)
+
+    for epoch ∈ 1:som.Nepochs
         shuffle!(X)
         # loop through each datapoint
-        for x ∈ eachrow(X)
-            updateWeights!(som, x, η, σ²)
+        for i ∈ 1:Nsteps
+            updateWeights!(som, X[:,i], i, Nsteps)
         end
-
-        # update the η and σ²
-        η = som.η₀ * exp(-epoch * som.λ)
-        σ² = som.σ₀² * exp(-epoch * som.β)
     end
 end
-
 

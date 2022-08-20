@@ -1,110 +1,75 @@
 using SelfOrganizingMaps
 using Plots
 using DataFrames
-using ImageView #, Colors
+using Distances
 
-# generating points on a sphere
-# r,θ = getdiscpoints(1000)
-# x = getpolar_x.(r, θ)
-# y = getpolar_y.(r, θ)
-# scatter(x, y, color=:blue, ms=1, aspect_ratio=:equal)
-
-# ϕ, θ = getspherepoints(1000)
-# x = getspherical_x.(ϕ,θ)
-# y = getspherical_y.(ϕ,θ)
-# z = getspherical_z.(ϕ,θ)
-# scatter(x, y, z, ms=1, color=:blue, xlims=(-1,1), ylims=(-1,1))
-
-# ϕ₁ = π/4
-# ϕ₂ = π/4
-# θ₁ = 0
-# θ₂ = π/2
-
-# sphericaldistance(ϕ₁,θ₁,ϕ₂,θ₂)*180/π
-# sphericaldistance.(ϕ₁,θ₁,ϕ,θ)
-
-# sphericaldistance(ϕ₁,θ₁,ϕ₂,θ₂)
-
-# w = rand(2, 100)
-# x = rand(2)
-# i = getBMUidx(w, x)
-
-# w[:,i]
-
-# w = rand(2, 100, 100)
-# i, j = getBMUidx(w, x)
-# w[:,i,j]
-
-# som = SquareSOM(2, 10,10)
-# idx = getBMUidx(som, x)
-# som.w[:,idx...]
-
-# updateWeights!(som, x, som.η₀, som.σ₀²)
-
-# practical example on random colors
-
-M = 1
-N =10
-k = 3
-
-som = SquareSOM(k, M, N; η₀=0.99, σ₀²=9.0, λ=0.1, β=0.1, nepochs=50)
-
-function SOMtoRGB(som)
-    SOM_pretty = [RGB(som.w[1,i,j], som.w[2,i,j], som.w[3,i,j]) for i∈1:M, j∈1:N]
-    return SOM_pretty
+function SOMtoRGB(som::SOM)
+    SOM_pretty = [RGB(som.W[1,i], som.W[2,i], som.W[3,i]) for i∈1:size(som.W, 2)]
 end
 
-function SOMtoRGB(som::SphericalSOM)
-    SOM_pretty = [RGB(som.w[1,i], som.w[2,i], som.w[3,i]) for i∈1:size(som.w, 2)]
+function plotSquareSOM(som::SOM)
+    cs = SOMtoRGB(som) # save this for before and after
+    p = scatter(som.coords[1,:], som.coords[2,:];
+                xlims=(-0.05, 1.05),
+                ylims=(-0.05, 1.05),
+                color=cs,
+                marker=:rect,
+                 ms=12.0,
+                aspect_ratio=:equal,
+                label=""
+                )
+    return p
+end
+
+function plotHexSOM(som::SOM)
+    cs = SOMtoRGB(som) # save this for before and after
+    p = scatter(som.coords[1,:], som.coords[2,:];
+                #xlims=(-0.05, 1.05),
+                #ylims=(-0.05, 0.85),
+                color=cs,
+                marker=:hexagon,
+                #ms=6.0,
+                ms=9.0,
+                aspect_ratio=:equal,
+                label="",
+                ticks=nothing,
+                xguide="",
+                yguide="",
+                framestyle=:none,
+                dpi=600,
+                )
+    return p
 end
 
 
 
-im1 = SOMtoRGB(som) # save this for before and after
-imshow(im1)
 
-# use random colors to train
-X = DataFrame(rand(1000, 3), :auto)
-train!(som, X)
-
-im2 = SOMtoRGB(som)
-imshow(im2)
+#X = rand(3, 5000)
+X = [1.0 0.0 0.0;
+     0.0 1.0 0.0;
+     0.0 0.0 1.0;
+     ]
 
 
+#som = SOM(25, 3, 1.0, 0.2^2, :hexagonal, :asymptotic, :gaussian, euclidean, 1)
+#som = SOM(25, 3, 0.20, 0.2^2, :hexagonal, :exponential, :gaussian, cosine_dist, 100)
+som = SOM(25, 3, 0.20, 0.2^2, :hexagonal, :exponential, :gaussian, cosine_dist, 1)
 
-Nfeatures = 10
-NNodes = 1000
+p1 = plotHexSOM(som)
+savefig("imgs/000.png")
 
-som = SphericalSOM(Nfeatures, NNodes)
-
-
-x = getspherical_x.(som.ϕ, som.θ)
-y = getspherical_y.(som.ϕ, som.θ)
-z = getspherical_z.(som.ϕ, som.θ)
-
-scatter(x,y,z)
-
-
-updateWeights!(som, rand(10), 0.99, 4.0)
-
-
-Nfeatures = 3
-Nnodes = 500
-X = DataFrame(rand(500, 3), :auto)
-som = SphericalSOM(Nfeatures, Nnodes)
-train!(som, X)
-
-
-x = getspherical_x.(som.ϕ, som.θ)
-y = getspherical_y.(som.ϕ, som.θ)
-z = getspherical_z.(som.ϕ, som.θ)
-size(x)
-
-cs = SOMtoRGB(som)
+for i ∈ 1:100
+    train!(som, X)
+    p = plotHexSOM(som)
+    savefig("imgs/"*lpad(i,3,"0")*".png")
+end
 
 
 
-plotlyjs()
-scatter(x,y,z, color=cs)
+p2 = plotHexSOM(som)
+# layout = @layout [a{0.45w} b{0.45w}]
+plot(p1, p2, dpi=600) #, layout=layout)#, plot_title="Pre-training vs Post-training")
 
-
+savefig("test_som.svg")
+savefig("test_som.png")
+savefig("test_som.pdf")
