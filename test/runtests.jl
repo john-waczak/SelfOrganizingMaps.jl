@@ -68,7 +68,13 @@ end
 
 
 @testset "SelfOrganizingMaps.jl" begin
-    X, y = make_regression(100, 3; rng=stable_rng());
-    println(typeof(X))
+    X, y = make_regression(50, 3; rng=stable_rng());
+
+    model = SelfOrganizingMap()
+    m = machine(model, X)
+    res = fit!(m)
+    X̃ = transform(m, X)
+    @test size(keys(X̃),1) == model.k^2
+    @test size(X̃[1],1) == 50
 end
 

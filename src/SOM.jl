@@ -7,7 +7,7 @@ struct SOM{T<:AbstractArray, T2<:AbstractArray,  R<:AbstractFloat, F<:Function, 
     σ_decay::F2  # [:exponential, :asymptotic, :none]
     neighbor_function::F3 #[:gaussian, :mexican_hat]
     neighbor_distance::M  # any metric from Distances.jl i.e. [euclidean, spherical_angle, cityblock, etc...]
-    matching_function::M2  # [euclidean, cosine_dist, etc...]
+    matching_distance::M2  # [euclidean, cosine_dist, etc...]
     Nepochs::Int
 end
 
@@ -45,7 +45,7 @@ function SOM(k::Int,
              η_decay::Symbol,
              σ_decay::Symbol,
              neighbor_function::Symbol,
-             matching_function::PreMetric,
+             matching_distance::PreMetric,
              Nepochs::Int
              )
     # generate W, the matrix of weights of shape nfeatures × k² nodes
@@ -91,17 +91,25 @@ function SOM(k::Int,
                η, σ²,  # decay rate and neighbor radius
                η_decay_func, σ_decay_func, # decay functions
                nfunc, neighbor_distance,# neighbor stuff
-               matching_function, # for computing d(xᵢ, wⱼ) between input xᵢ and node weight wⱼ
+               matching_distance, # for computing d(xᵢ, wⱼ) between input xᵢ and node weight wⱼ
                Nepochs
                )
 end
 
 
 function getBMUidx(som::SOM, x::AbstractVector)
-    d = colwise(som.matching_function, som.W, rand(3))
+    d = colwise(som.matching_distance, som.W, x)
     idx = argmin(d)
     return idx
 end
+
+
+# function getBMUidx(som::SOM, X::AbstractArray)
+#     ds = pairwise(som.matching_distance, som.W, X; dims=2)
+#     idxs = [argmin(col) for col ∈ eachcol(ds)]
+#     return idxs
+# end
+
 
 
 function updateWeights!(som::SOM, x::AbstractVector, step::Int, Nsteps::Int)
