@@ -15,8 +15,8 @@ makedocs(;
     ),
     pages=[
         "Home" => "index.md",
-        "Tutorials" => ["Example 1: Colors" => "/tutorials/colors.md",
-                        "Example 2: Working with MLJ" => "/tutorials/using_mlj.md",
+        "Tutorials" => ["Example 1: Colors" => "tutorials/colors.md",
+                        "Example 2: Working with MLJ" => "tutorials/using_mlj.md",
                         ],
         "Function Docs" => "api.md" ,
     ],
