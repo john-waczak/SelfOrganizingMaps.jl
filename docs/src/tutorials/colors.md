@@ -1,3 +1,3 @@
 # Mapping Color to the 2-D Plane
 
-
+We'll put the example currently in the tests here...
