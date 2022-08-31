@@ -76,7 +76,6 @@ function MMI.transform(m::SelfOrganizingMap, fitresult, X)
     return MMI.table(X̃, names=node_labels, prototype=X)
 end
 
-
 metadata_pkg.(
     (SelfOrganizingMap,),
     name="SelfOrganizingMaps",
@@ -89,11 +88,8 @@ metadata_pkg.(
 
 metadata_model(
     SelfOrganizingMap,
-    human_name = "Self Organizing Map",
     input = MMI.Table(Continuous),
-    #output = AbstractVector{Multiclass},
     output = MMI.Table(Continuous),
-    weights = false,
     path = "$(PKG).SelfOrganizingMap"
 )
 
