@@ -66,7 +66,7 @@ MMI.fitted_params(m::SelfOrganizingMap, fitresult) = (weights=fitresult.W,)
 
 
 
-function MMI.transform(m, fitresult, X)
+function MMI.transform(m::SelfOrganizingMap, fitresult, X)
     som = fitresult
     Xmatrix = transpose(MMI.matrix(X))
 
