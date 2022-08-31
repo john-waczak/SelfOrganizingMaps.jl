@@ -5,6 +5,7 @@ using Distances
 using MLJBase
 using StableRNGs  # should add this for later
 using DataFrames
+using MLJTestIntegration
 
 stable_rng() = StableRNGs.StableRNG(1234)
 
@@ -79,7 +80,22 @@ end
     @test size(X̃[1],1) == 50
 end
 
-
+@testset "MLJ interface" begin
+    r = [1.0, 0.0, 0.0]
+    g = [0.0, 1.0, 0.0]
+    b = [0.0, 0.0, 1.0]
+    X = (; r, g, b) # a column table
+    models = [SelfOrganizingMap,]
+    failures, summary = MLJTestIntegration.test(
+        models,
+        X;
+        mod=@__MODULE__,
+        verbosity=0, # set to 2 for maximum information
+        throw=false, # set to true to debug
+    )
+    @test isempty(failures)
+    @test summary[1].operations == "transform"
+end
 
 function SOMtoRGB(som::SOM)
     SOM_pretty = [RGB(som.W[1,i], som.W[2,i], som.W[3,i]) for i∈1:size(som.W, 2)]
