@@ -66,7 +66,7 @@ MMI.fitted_params(m::SelfOrganizingMap, fitresult) = (weights=fitresult.W,)
 
 
 
-function MMI.transform(m, fitresult, X)
+function MMI.transform(m::SelfOrganizingMap, fitresult, X)
     som = fitresult
     Xmatrix = transpose(MMI.matrix(X))
 
@@ -75,7 +75,6 @@ function MMI.transform(m, fitresult, X)
 
     return MMI.table(X̃, names=node_labels, prototype=X)
 end
-
 
 metadata_pkg.(
     (SelfOrganizingMap,),
@@ -89,11 +88,8 @@ metadata_pkg.(
 
 metadata_model(
     SelfOrganizingMap,
-    human_name = "Self Organizing Map",
     input = MMI.Table(Continuous),
-    #output = AbstractVector{Multiclass},
     output = MMI.Table(Continuous),
-    weights = false,
     path = "$(PKG).SelfOrganizingMap"
 )
 
