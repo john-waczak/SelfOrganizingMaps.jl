@@ -76,7 +76,13 @@ end
     X̃ = MLJBase.transform(m, X)
     @test size(keys(X̃),1) == model.k^2
     @test size(X̃[1],1) == 50
+
+
+
+    fp = fitted_params(m)
+    @test Set([:weights, :coords]) == Set(keys(fp))
 end
+
 
 @testset "MLJ interface" begin
     r = [1.0, 0.0, 0.0]

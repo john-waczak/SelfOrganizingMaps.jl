@@ -61,7 +61,7 @@ function MMI.fit(m::SelfOrganizingMap, verbosity::Int, X)
     return som, cache, report
 end
 
-MMI.fitted_params(m::SelfOrganizingMap, fitresult) = (weights=fitresult.W,)
+MMI.fitted_params(m::SelfOrganizingMap, fitresult) = (weights=fitresult.W, coords=fitresult.coords)
 
 
 
