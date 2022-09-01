@@ -34,8 +34,7 @@ end
 
 
 function MMI.fit(m::SelfOrganizingMap, verbosity::Int, X)
-    schema = Tables.schema(X)
-    Xmatrix = transpose(MMI.matrix(X))
+    Xmatrix = MMI.matrix(X)'  # make matrix p × n for efficiency
 
     nfeatures = size(Xmatrix, 1)
 
@@ -88,7 +87,7 @@ metadata_pkg.(
 
 metadata_model(
     SelfOrganizingMap,
-    input = MMI.Table(Continuous),
+    input = Union{AbstractMatrix{Continuous}, MMI.Table(Continuous)},
     output = MMI.Table(Continuous),
     path = "$(PKG).SelfOrganizingMap"
 )
