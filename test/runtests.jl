@@ -74,13 +74,17 @@ end
     m = machine(model, X)
     res = fit!(m)
     X̃ = MLJBase.transform(m, X)
-    @test size(keys(X̃),1) == model.k^2
-    @test size(X̃[1],1) == 50
 
+    println(size(X̃))
 
+    @test size(X̃) == (50, 2)
 
     fp = fitted_params(m)
     @test Set([:weights, :coords]) == Set(keys(fp))
+
+    rpt = report(m)
+    @test Set([:classes]) == Set(keys(rpt))
+    @test size(rpt.classes, 1) == 50
 end
 
 

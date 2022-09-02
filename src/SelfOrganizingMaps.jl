@@ -56,7 +56,9 @@ function MMI.fit(m::SelfOrganizingMap, verbosity::Int, X)
 
     # 3. collect results
     cache  = nothing
-    report = NamedTuple()
+    # put class labels in the report
+    classes = getBMUidx(som, Xmatrix)
+    report = (; :classes=>classes)
 
     return som, cache, report
 end
@@ -66,13 +68,19 @@ MMI.fitted_params(m::SelfOrganizingMap, fitresult) = (weights=fitresult.W, coord
 
 
 function MMI.transform(m::SelfOrganizingMap, fitresult, X)
+    # return the coordinates of the bmu for each instance
     som = fitresult
     Xmatrix = transpose(MMI.matrix(X))
 
-    node_labels = [Symbol("node_$(i)") for i ∈ 1:(m.k^2)]
-    X̃ = pairwise(som.matching_distance, Xmatrix, som.W; dims=2)
+    res = zeros(size(Xmatrix, 2), 2)
+    for i ∈ 1:size(Xmatrix, 2)
+        bmu = getBMUidx(som, Xmatrix[:,i])
+        res[i, 1] = som.coords[1, bmu]
+        res[i, 2] = som.coords[2, bmu]
+    end
 
-    return MMI.table(X̃, names=node_labels, prototype=X)
+    # bmus = getBMUidx(som, Xmatrix)
+    return res
 end
 
 metadata_pkg.(
@@ -88,7 +96,7 @@ metadata_pkg.(
 metadata_model(
     SelfOrganizingMap,
     input = Union{AbstractMatrix{Continuous}, MMI.Table(Continuous)},
-    output = MMI.Table(Continuous),
+    output = AbstractMatrix{Continuous},
     path = "$(PKG).SelfOrganizingMap"
 )
 

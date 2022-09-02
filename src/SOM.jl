@@ -104,11 +104,11 @@ function getBMUidx(som::SOM, x::AbstractVector)
 end
 
 
-# function getBMUidx(som::SOM, X::AbstractArray)
-#     ds = pairwise(som.matching_distance, som.W, X; dims=2)
-#     idxs = [argmin(col) for col ∈ eachcol(ds)]
-#     return idxs
-# end
+function getBMUidx(som::SOM, X::AbstractArray)
+    ds = pairwise(som.matching_distance, som.W, X; dims=2)
+    idxs = [argmin(col) for col ∈ eachcol(ds)]
+    return idxs
+end
 
 
 
