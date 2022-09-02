@@ -102,6 +102,9 @@ metadata_model(
 
 
 
+# ------------ documentation ------------------------
+
+
 const DOC_SOM = "[Kohonen's Self Organizing Map](https://ieeexplore.ieee.org/abstract/document/58325?casa_token=pGue0TD38nAAAAAA:kWFkvMJQKgYOTJjJx-_bRx8n_tnWEpau2QeoJ1gJt0IsywAuvkXYc0o5ezdc2mXfCzoEZUQXSQ)"*
     ", Proceedings of the IEEE; Kohonen, T.; (1990):"*
     "\"The self-organizing map\""
@@ -137,7 +140,6 @@ Train the machine with `fit!(mach, rows=...)`.
 # Fitted parameters
 The fields of `fitted_params(mach)` are:
 - `weights`: Array of weight vectors for the SOM nodes.
-# Report
 - `coords`: The coordinates of each of the SOM nodes.
 
 # Report
