@@ -24,7 +24,7 @@ MMI.@mlj_model mutable struct SelfOrganizingMap <: MMI.Unsupervised
     k::Int = 10::(_ ≥ 2)
     η::Float64 = 0.5::(_ ≥ 0.0)
     σ²::Float64 = 0.05::(_ ≥ 0.0)
-    topology::Symbol = :rectangular::(_ ∈ (:rectangular, :hexagonal, :spherical))
+    grid_type::Symbol = :rectangular::(_ ∈ (:rectangular, :hexagonal, :spherical))
     η_decay::Symbol = :exponential::(_ ∈ (:asymptotic, :exponential))
     σ_decay::Symbol = :exponential::(_ ∈ (:asymptotic, :exponential, :none))
     neighbor_function::Symbol = :gaussian::(_ ∈ (:gaussian, :mexican_hat))
@@ -43,7 +43,7 @@ function MMI.fit(m::SelfOrganizingMap, verbosity::Int, X)
               nfeatures,
               m.η,
               m.σ²,
-              m.topology,
+              m.grid_type,
               m.η_decay,
               m.σ_decay,
               m.neighbor_function,
@@ -101,6 +101,64 @@ metadata_model(
 )
 
 
-# NOTE: NEED TO ADD DOCUMENTATION
+
+const DOC_SOM = "[Kohonen's Self Organizing Map](https://ieeexplore.ieee.org/abstract/document/58325?casa_token=pGue0TD38nAAAAAA:kWFkvMJQKgYOTJjJx-_bRx8n_tnWEpau2QeoJ1gJt0IsywAuvkXYc0o5ezdc2mXfCzoEZUQXSQ)"*
+    ", Proceedings of the IEEE; Kohonen, T.; (1990):"*
+    "\"The self-organizing map\""
+
+
+"""
+$(MMI.doc_header(SelfOrganizingMap))
+
+SelfOrganizingMaps implements $(DOC_SOM)
+
+# Training data
+In MLJ or MLJBase, bind an instance `model` to data with
+    mach = machine(model, X)
+where
+- `X`: an `AbstractMatrix` or `Table` of input features whose columns are of scitype `Continuous.`
+
+Train the machine with `fit!(mach, rows=...)`.
+
+# Hyper-parameters
+- `k=10`: Number of nodes along once side of SOM grid. There are `k²` total nodes.
+- `η=0.5`: Learning rate. Scales adjust made to wining node and its neighbors during each round of training.
+- `σ²=0.05`: The (squared) neighbor radius. Used to determine scale for neighbor node adjustments.
+- `grid_type=:rectangular`  Node grid geometry. One of `(:rectangular, :hexagonal, :spherical)`.
+- `η_decay=:exponential` Learning rate schedule function. One of `(:exponential, :asymptotic)`
+- `σ_decay=:exponential` Neighbor radius schedule function. One of `(:exponential, :asymptotic, :none)`
+- `neighbor_function=:gaussian` Kernel function used to make adjustment to neighbor weights. Scale is set by `σ²`. One of `(:gaussian, :mexican_hat)`.
+- `matching_distance=euclidean` Distance function from `Distances.jl` used to determine winning node.
+- `Nepochs=1` Number of times to repeat training on the shuffled dataset.
+
+# Operations
+- `transform(mach, X)`: returns the coordinates of the winning SOM node for each instance of `X`
+
+# Fitted parameters
+The fields of `fitted_params(mach)` are:
+- `weights`: Array of weight vectors for the SOM nodes.
+# Report
+- `coords`: The coordinates of each of the SOM nodes.
+
+# Report
+The fields of `report(mach)` are:
+- `classes`: the index of the winning node for each instance in X interpreted as a class label
+
+# Examples
+```
+using MLJ
+som = @load SelfOrganizingMap pkg=SelfOrganizingMaps
+model = som()
+X, y = make_regression(50, 3) # synthetic data
+mach = machine(model, X) |> fit!
+X̃ = transform(mach, X)
+
+rpt = report(mach)
+classes = rpt.classes
+```
+"""
+SelfOrganizingMap
+
+
 
 end

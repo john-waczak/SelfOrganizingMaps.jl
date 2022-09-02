@@ -41,7 +41,7 @@ function SOM(k::Int,
              nfeatures::Int,
              η::Float64,
              σ²::Float64,
-             topology::Symbol,
+             grid_type::Symbol,
              η_decay::Symbol,
              σ_decay::Symbol,
              neighbor_function::Symbol,
@@ -52,10 +52,10 @@ function SOM(k::Int,
     W = rand(Float32, (nfeatures, k^2))
 
     # generate a k×k grid for :rectangular or hexagonal, otherwise, generate k² points
-    if topology == :hexagonal
+    if grid_type == :hexagonal
         coords = gethexpoints(k)
         neighbor_distance = euclidean
-    elseif topology == :spherical
+    elseif grid_type == :spherical
         coords = getspherepoints(k^2)
         neighbor_distance = spherical_angle
     else
