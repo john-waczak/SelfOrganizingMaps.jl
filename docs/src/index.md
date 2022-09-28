@@ -8,9 +8,20 @@ CurrentModule = SelfOrganizingMaps
 
 Documentation for [SelfOrganizingMaps](https://github.com/john-waczak/SelfOrganizingMaps.jl).
 
-```@index
+
+# Installation
+
+You can install `SelfOrganizingMaps.jl` using Julia's package manager: 
+```julia
+Pkg.add("SelfOrganizingMaps")
 ```
 
-```@autodocs
-Modules = [SelfOrganizingMaps]
-```
+# Dimensionality Reduction 
+
+
+# Unsupervised Classification 
+
+
+# MLJ API 
+
+# Example: Colors: 
