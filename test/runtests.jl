@@ -81,6 +81,8 @@ end
 
     fp = fitted_params(m)
     @test Set([:weights, :coords]) == Set(keys(fp))
+    @test size(fp.coords) == (model.k^2, 2)
+    @test size(fp.weights) == (model.k^2, 3)
 
     rpt = report(m)
     @test Set([:classes]) == Set(keys(rpt))

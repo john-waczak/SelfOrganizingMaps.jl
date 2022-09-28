@@ -63,7 +63,7 @@ function MMI.fit(m::SelfOrganizingMap, verbosity::Int, X)
     return som, cache, report
 end
 
-MMI.fitted_params(m::SelfOrganizingMap, fitresult) = (weights=fitresult.W, coords=fitresult.coords)
+MMI.fitted_params(m::SelfOrganizingMap, fitresult) = (weights=fitresult.W', coords=fitresult.coords')
 
 
 
@@ -135,15 +135,15 @@ Train the machine with `fit!(mach, rows=...)`.
 - `Nepochs=1` Number of times to repeat training on the shuffled dataset.
 
 # Operations
-- `transform(mach, X)`: returns the coordinates of the winning SOM node for each instance of `X`
+- `transform(mach, X)`: returns the coordinates of the winning SOM node for each instance of `X`. For SOM of grid_type `:rectangular` and `:hexagonal`, these are cartesian coordinates. For grid_type `:spherical`, these are the latitude and longitude in radians.
 
 # Fitted parameters
 The fields of `fitted_params(mach)` are:
 
-- `coords`: The coordinates of each of the SOM nodes (points in the domain of the map)
+- `coords`: The coordinates of each of the SOM nodes (points in the domain of the map) with shape (k², 2)
 
 - `weights`: Array of weight vectors for the SOM nodes (corresponding points in the map's
-  range)
+  range) of shape (k², input dimension)
 
 # Report
 The fields of `report(mach)` are:
