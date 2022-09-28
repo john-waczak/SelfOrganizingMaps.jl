@@ -1,5 +1,7 @@
 using SelfOrganizingMaps
 using Plots
+using MLJ
+
 
 function SOMtoRGB(som::SOM)
     SOM_pretty = [RGB(som.W[1,i], som.W[2,i], som.W[3,i]) for i∈1:size(som.W, 2)]
@@ -49,14 +51,20 @@ model = SelfOrganizingMap()
 model.k = 25
 model.η = 0.20
 model.σ² = 0.2^2
-model.topology = :hexagonal
+model.grid_type= :hexagonal
 model.Nepochs=100
 
 m = machine(model, X)
 fit!(m)
 
 m.fitresult
-X̂ = DataFrame(MLJBase.transform(m, X))
+
+size(fitted_params(m).weights)
+size(fitted_params(m).coords)
+
+report(m)
+
+X̂ = transform(m, X)
 
 
 plotHexSOM(m.fitresult)
