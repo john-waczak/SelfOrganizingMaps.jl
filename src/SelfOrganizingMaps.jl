@@ -125,7 +125,7 @@ Train the machine with `fit!(mach, rows=...)`.
 
 # Hyper-parameters
 - `k=10`: Number of nodes along once side of SOM grid. There are `k²` total nodes.
-- `η=0.5`: Learning rate. Scales adjust made to wining node and its neighbors during each round of training.
+- `η=0.5`: Learning rate. Scales adjust made to winning node and its neighbors during each round of training.
 - `σ²=0.05`: The (squared) neighbor radius. Used to determine scale for neighbor node adjustments.
 - `grid_type=:rectangular`  Node grid geometry. One of `(:rectangular, :hexagonal, :spherical)`.
 - `η_decay=:exponential` Learning rate schedule function. One of `(:exponential, :asymptotic)`
@@ -139,8 +139,11 @@ Train the machine with `fit!(mach, rows=...)`.
 
 # Fitted parameters
 The fields of `fitted_params(mach)` are:
-- `weights`: Array of weight vectors for the SOM nodes.
-- `coords`: The coordinates of each of the SOM nodes.
+
+- `coords`: The coordinates of each of the SOM nodes (points in the domain of the map)
+
+- `weights`: Array of weight vectors for the SOM nodes (corresponding points in the map's
+  range)
 
 # Report
 The fields of `report(mach)` are:
