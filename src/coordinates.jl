@@ -7,9 +7,13 @@ function getspherepoints(N::Int)
     λ = 2π .* φ .* idx # polar angle (longitude)
 
     # return vcat(λ', ϕ')
-    return vcat(ϕ', λ')
+    return rem2pi.(vcat(ϕ', λ'), RoundNearest)
 end
 
+# get the cartesian representation on the unit sphere
+getspherical_x(ϕ,λ) = cos(ϕ)*cos(λ)
+getspherical_y(ϕ,λ) = cos(ϕ)*sin(λ)
+getspherical_z(ϕ,λ) = sin(ϕ)
 
 
 function getsquarepoints(k)
@@ -37,9 +41,3 @@ function gethexpoints(k)
 
     return vcat(vec(X)', vec(Y)')
 end
-
-
-getspherical_x(λ,ϕ) = cos(ϕ)*cos(λ)
-getspherical_y(λ,ϕ) = cos(ϕ)*sin(λ)
-getspherical_z(λ,ϕ) = sin(ϕ)
-
