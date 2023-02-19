@@ -3,7 +3,7 @@ using Test
 using Distances
 using MLJBase
 using StableRNGs  # should add this for later
-using MLJTestIntegration
+using MLJTestInterface
 
 stable_rng() = StableRNGs.StableRNG(1234)
 
@@ -96,7 +96,7 @@ end
     b = [0.0, 0.0, 1.0]
     X = (; r, g, b) # a column table
     models = [SelfOrganizingMap,]
-    failures, summary = MLJTestIntegration.test(
+    failures, summary = MLJTestInterface.test(
         models,
         X;
         mod=@__MODULE__,
