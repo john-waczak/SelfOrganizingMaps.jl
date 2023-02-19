@@ -135,7 +135,7 @@ Train the machine with `fit!(mach, rows=...)`.
 - `Nepochs=1` Number of times to repeat training on the shuffled dataset.
 
 # Operations
-- `transform(mach, X)`: returns the coordinates of the winning SOM node for each instance of `X`. For SOM of grid_type `:rectangular` and `:hexagonal`, these are cartesian coordinates. For grid_type `:spherical`, these are the latitude and longitude in radians.
+- `transform(mach, Xnew)`: returns the coordinates of the winning SOM node for each instance of `Xnew`. For SOM of grid_type `:rectangular` and `:hexagonal`, these are cartesian coordinates. For grid_type `:spherical`, these are the latitude and longitude in radians.
 
 # Fitted parameters
 The fields of `fitted_params(mach)` are:
@@ -147,7 +147,7 @@ The fields of `fitted_params(mach)` are:
 
 # Report
 The fields of `report(mach)` are:
-- `classes`: the index of the winning node for each instance in X interpreted as a class label
+- `classes`: the index of the winning node for each instance of the training data X interpreted as a class label
 
 # Examples
 ```
