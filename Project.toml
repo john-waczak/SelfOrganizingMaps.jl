@@ -1,7 +1,7 @@
 name = "SelfOrganizingMaps"
 uuid = "ba4b7379-301a-4be0-bee6-171e4e152787"
 authors = ["John Waczak <john.louis.waczak@gmail.com>"]
-version = "0.1.1"
+version = "0.1.2"
 
 [deps]
 Distances = "b4f34e82-e78d-54a5-968a-f98e89d6e8f7"
