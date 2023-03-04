@@ -70,7 +70,7 @@ MMI.fitted_params(m::SelfOrganizingMap, fitresult) = (weights=fitresult.W', coor
 function MMI.transform(m::SelfOrganizingMap, fitresult, X)
     # return the coordinates of the bmu for each instance
     som = fitresult
-    Xmatrix = transpose(MMI.matrix(X))
+    Xmatrix = MMI.matrix(X)'
 
     res = zeros(size(Xmatrix, 2), 2)
     for i ∈ 1:size(Xmatrix, 2)
