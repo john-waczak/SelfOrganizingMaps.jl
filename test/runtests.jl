@@ -87,6 +87,11 @@ end
     rpt = report(m)
     @test Set([:classes]) == Set(keys(rpt))
     @test size(rpt.classes, 1) == 50
+
+    # predicted class is BMU (same as in report)
+    classes = MLJBase.predict(m, X)
+    @test scitype(classes[end]) <: Multiclass
+    @test size(classes, 1) == 50
 end
 
 
@@ -103,8 +108,10 @@ end
         verbosity=0, # set to 2 for maximum information
         throw=false, # set to true to debug
     )
+    println(failures)
+    println(summary[1].operations)
     @test isempty(failures)
-    @test summary[1].operations == "transform"
+    @test summary[1].operations == "predict, transform"
 end
 
 

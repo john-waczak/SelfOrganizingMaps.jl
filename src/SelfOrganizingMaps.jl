@@ -83,6 +83,18 @@ function MMI.transform(m::SelfOrganizingMap, fitresult, X)
     return res
 end
 
+
+function MMI.predict(model::SelfOrganizingMap, fitresult, Xnew)
+    som = fitresult
+    Xmatrix = MMI.matrix(Xnew)'
+    class_labels = MMI.categorical(1:model.k^2) # there are k^2 many SOM nodes
+
+    class_preds = getBMUidx(som, Xmatrix)
+    return class_labels[class_preds]
+end
+
+
+
 metadata_pkg.(
     (SelfOrganizingMap,),
     name="SelfOrganizingMaps",
